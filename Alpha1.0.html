@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RSS阅读器 - 全设备适配</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary-color: #2575fc;
+            --secondary-color: #6a11cb;
+            --success-color: #27ae60;
+            --error-color: #d63031;
+            --warning-color: #f39c12;
+            --text-color: #333;
+            --text-light: #636e72;
+            --text-lighter: #6c757d;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --border-color: #e1e5eb;
+            --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 8px 20px rgba(0, 0, 0, 0.12);
+            
+            /* 翻译结果相关变量 - 日间模式 */
+            --translation-bg: #f8f9fa;
+            --translation-border: #27ae60;
+            --translation-hint-bg: #e8f4fc;
+            --translation-hint-color: #666;
+            --translation-text: #333;
+            
+            /* 字体大小变量 */
+            --font-size-xs: 0.75rem;    /* 12px */
+            --font-size-sm: 0.875rem;   /* 14px */
+            --font-size-base: 1rem;     /* 16px */
+            --font-size-lg: 1.125rem;   /* 18px */
+            --font-size-xl: 1.25rem;    /* 20px */
+            --font-size-2xl: 1.5rem;    /* 24px */
+            --font-size-3xl: 1.875rem;  /* 30px */
+            --font-size-4xl: 2.25rem;   /* 36px */
+            
+            /* 间距变量 */
+            --spacing-xs: 0.25rem;      /* 4px */
+            --spacing-sm: 0.5rem;       /* 8px */
+            --spacing-md: 1rem;         /* 16px */
+            --spacing-lg: 1.5rem;       /* 24px */
+            --spacing-xl: 2rem;         /* 32px */
+            --spacing-2xl: 3rem;        /* 48px */
+            
+            /* 圆角变量 */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-full: 9999px;
+            
+            /* 行高变量 */
+            --line-height-tight: 1.25;
+            --line-height-normal: 1.5;
+            --line-height-relaxed: 1.75;
+            
+            /* 过渡动画 */
+            --transition-fast: 150ms ease;
+            --transition-normal: 300ms ease;
+            --transition-slow: 500ms ease;
+        }
+        
+        /* 暗色模式变量 */
+        .dark-mode {
+            --text-color: #e9ecef;
+            --text-light: #adb5bd;
+            --text-lighter: #6c757d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --border-color: #2d3436;
+            
+            /* 翻译结果相关变量 - 夜间模式 */
+            --translation-bg: #2d3436;
+            --translation-border: #27ae60;
+            --translation-hint-bg: #1e3a5f;
+            --translation-hint-color: #b0b0b0;
+            --translation-text: #e9ecef;
+        }
+        
+        .dark-mode .device-ereader {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+        }
+        
+        .dark-mode .feed-title,
+        .dark-mode .item-title,
+        .dark-mode .article-content h2,
+        .dark-mode .article-content h3 {
+            color: #e9ecef;
+        }
+        
+        .dark-mode .article-content code {
+            background-color: #2d3436;
+        }
+        
+        .dark-mode .item-meta {
+            border-top-color: #2d3436;
+        }
+        
+        .dark-mode .example-btn {
+            background-color: #2d3436;
+            border-color: #495057;
+            color: #adb5bd;
+        }
+        
+        .dark-mode .example-btn:hover {
+            background-color: #343a40;
+        }
+        
+        /* 设备特定变量 - 默认桌面 */
+        .device-desktop {
+            --font-scale: 1;
+            --card-columns: 3;
+            --container-padding: var(--spacing-xl);
+            --modal-max-width: 900px;
+        }
+        
+        .device-tablet {
+            --font-scale: 0.95;
+            --card-columns: 2;
+            --container-padding: var(--spacing-lg);
+            --modal-max-width: 700px;
+        }
+        
+        .device-mobile {
+            --font-scale: 0.9;
+            --card-columns: 1;
+            --container-padding: var(--spacing-md);
+            --modal-max-width: 95%;
+        }
+        
+        .device-ereader {
+            --font-scale: 1.1;
+            --card-columns: 1;
+            --container-padding: var(--spacing-md);
+            --modal-max-width: 600px;
+            --bg-color: #f8f1e4;
+            --text-color: #333333;
+            --line-height-normal: 1.8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', sans-serif;
+            line-height: var(--line-height-normal);
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: var(--container-padding);
+            min-height: 100vh;
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* 夜间模式切换按钮 */
+        .theme-toggle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: var(--radius-full);
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            font-size: 1.2rem;
+        }
+        
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .dark-mode .theme-toggle-btn {
+            background: rgba(0, 0, 0, 0.3);
+            color: #e9ecef;
+        }
+        
+        .dark-mode .theme-toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        /* 翻译结果样式 */
+        .translation-result {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .translation-title {
+            color: var(--success-color);
+            margin-bottom: var(--spacing-md);
+            font-size: calc(var(--font-size-lg) * var(--font-scale));
+        }
+        
+        .translation-content {
+            background-color: var(--translation-bg);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--translation-border);
+            color: var(--translation-text);
+            line-height: var(--line-height-relaxed);
+        }
+        
+        .translation-hint {
+            background-color: var(--translation-hint-bg);
+            color: var(--translation-hint-color);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-top: var(--spacing-lg);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+        }
+        
+        /* 设备检测和切换 */
+        .device-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-medium);
+            text-align: center;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: calc(var(--font-size-3xl) * var(--font-scale));
+            margin-bottom: var(--spacing-sm);
+            font-weight: 700;
+            line-height: var(--line-height-tight);
+        }
+        
+        .subtitle {
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .input-section {
+            background-color: var(--card-bg);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-light);
+            transition: background-color 0.3s ease;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        #rss-url {
+            flex: 1;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+            transition: border-color var(--transition-normal), background-color 0.3s ease, color 0.3s ease;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        #rss-url:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .btn {
+            padding: var(--spacing-md) var(--spacing-xl);
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color var(--transition-normal);
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            background-color: #1a68e8;
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn.secondary {
+            background-color: var(--text-lighter);
+        }
+        
+        .btn.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .example-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: var(--radius-sm);
+            color: var(--text-light);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .example-btn:hover {
+            background-color: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-lighter);
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-full);
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: var(--spacing-sm);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .feed-info {
+            background-color: var(--card-bg);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-light);
+            margin-bottom: var(--spacing-sm);
+            transition: background-color 0.3s ease;
+        }
+        
+        .feed-title {
+            font-size: calc(var(--font-size-2xl) * var(--font-scale));
+            color: #2d3436;
+            margin-bottom: var(--spacing-sm);
+            cursor: pointer;
+            transition: color var(--transition-normal);
+            line-height: var(--line-height-tight);
+        }
+        
+        .feed-title:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .feed-description {
+            color: var(--text-light);
+            margin-bottom: var(--spacing-md);
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+        }
+        
+        .feed-meta {
+            display: flex;
+            gap: var(--spacing-lg);
+            color: var(--text-lighter);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+            flex-wrap: wrap;
+        }
+        
+        .items-container {
+            display: grid;
+            grid-template-columns: repeat(var(--card-columns), 1fr);
+            gap: var(--spacing-lg);
+        }
+        
+        .item-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal), background-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            height: 100%;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+        
+        .item-content {
+            padding: var(--spacing-xl);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .item-title {
+            font-size: calc(var(--font-size-lg) * var(--font-scale));
+            color: #2d3436;
+            margin-bottom: var(--spacing-md);
+            line-height: var(--line-height-tight);
+            font-weight: 600;
+        }
+        
+        .item-description {
+            color: var(--text-light);
+            margin-bottom: var(--spacing-md);
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            line-height: var(--line-height-normal);
+        }
+        
+        .item-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-lighter);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+            padding-top: var(--spacing-md);
+            border-top: 1px solid #f1f3f5;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+        
+        .error {
+            background-color: #ffe6e6;
+            color: var(--error-color);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--error-color);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .success {
+            background-color: #e6f7e6;
+            color: var(--success-color);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--success-color);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .api-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+        
+        .api-selector select {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background-color: var(--card-bg);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+            color: var(--text-color);
+        }
+        
+        /* 文章详情模态框样式 */
+        .article-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+            padding: var(--container-padding);
+        }
+        
+        .article-detail-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: auto;
+            width: 100%;
+            max-width: var(--modal-max-width);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(-20px);
+            transition: transform var(--transition-normal), background-color 0.3s ease;
+        }
+        
+        .article-detail-modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: var(--spacing-xl);
+            position: relative;
+        }
+        
+        .modal-title {
+            font-size: calc(var(--font-size-2xl) * var(--font-scale));
+            margin: 0 0 var(--spacing-sm) 0;
+            line-height: var(--line-height-tight);
+            font-weight: 600;
+        }
+        
+        .modal-meta {
+            display: flex;
+            gap: var(--spacing-lg);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+            opacity: 0.9;
+            flex-wrap: wrap;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-full);
+            font-size: calc(var(--font-size-lg) * var(--font-scale));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color var(--transition-normal);
+        }
+        
+        .close-modal:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .modal-body {
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+            flex: 1;
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+            line-height: var(--line-height-normal);
+        }
+        
+        .article-content {
+            line-height: var(--line-height-relaxed);
+        }
+        
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-md);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .article-content p {
+            margin-bottom: 1.2em;
+        }
+        
+        .article-content h2, .article-content h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            color: #2d3436;
+        }
+        
+        .article-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .article-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .article-content code {
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .article-content pre {
+            background-color: #2d3436;
+            color: #f8f9fa;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .modal-footer {
+            padding: var(--spacing-xl);
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+        
+        .modal-actions .action-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color var(--transition-normal);
+            font-size: calc(var(--font-size-base) * var(--font-scale));
+        }
+        
+        .modal-actions .action-btn.secondary {
+            background-color: var(--text-lighter);
+        }
+        
+        .modal-actions .action-btn:hover {
+            background-color: #1a68e8;
+        }
+        
+        .modal-actions .action-btn.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .modal-actions .action-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .modal-actions .action-btn.translate-btn {
+            background-color: var(--success-color);
+        }
+        
+        .modal-actions .action-btn.translate-btn:hover {
+            background-color: #219653;
+        }
+        
+        .translation-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--text-lighter);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+        }
+        
+        .translation-loading {
+            display: none;
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-lighter);
+        }
+        
+        .translation-loading.active {
+            display: block;
+        }
+        
+        .translation-error {
+            background-color: #ffe6e6;
+            color: var(--error-color);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            margin: var(--spacing-sm) 0;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: var(--spacing-2xl);
+            padding: var(--spacing-xl);
+            color: var(--text-lighter);
+            font-size: calc(var(--font-size-sm) * var(--font-scale));
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* 响应式断点 */
+        
+        /* 大桌面 (> 1440px) */
+        @media (min-width: 1441px) {
+            .container {
+                max-width: 1400px;
+            }
+        }
+        
+        /* 桌面 (1024px - 1440px) */
+        @media (max-width: 1440px) and (min-width: 1024px) {
+            .device-desktop {
+                --font-scale: 0.95;
+                --card-columns: 3;
+            }
+        }
+        
+        /* 小桌面/大平板 (768px - 1023px) */
+        @media (max-width: 1023px) and (min-width: 768px) {
+            .device-tablet {
+                --font-scale: 0.9;
+                --card-columns: 2;
+                --container-padding: var(--spacing-md);
+            }
+            
+            .items-container {
+                gap: var(--spacing-md);
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .translation-info {
+                justify-content: center;
+            }
+        }
+        
+        /* 平板 (600px - 767px) */
+        @media (max-width: 767px) and (min-width: 600px) {
+            .device-tablet {
+                --font-scale: 0.85;
+                --card-columns: 2;
+                --container-padding: var(--spacing-md);
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .examples {
+                justify-content: center;
+            }
+        }
+        
+        /* 大手机 (480px - 599px) */
+        @media (max-width: 599px) and (min-width: 480px) {
+            .device-mobile {
+                --font-scale: 0.85;
+                --card-columns: 1;
+                --container-padding: var(--spacing-sm);
+            }
+            
+            .feed-meta {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+            
+            .modal-header {
+                padding: var(--spacing-lg);
+            }
+            
+            .modal-body {
+                padding: var(--spacing-lg);
+            }
+            
+            .modal-footer {
+                padding: var(--spacing-md);
+            }
+            
+            .theme-toggle-container {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .theme-toggle-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* 小手机 (< 480px) */
+        @media (max-width: 479px) {
+            .device-mobile {
+                --font-scale: 0.8;
+                --card-columns: 1;
+                --container-padding: var(--spacing-xs);
+            }
+            
+            header {
+                padding: var(--spacing-lg);
+            }
+            
+            .input-section {
+                padding: var(--spacing-lg);
+            }
+            
+            .feed-info {
+                padding: var(--spacing-lg);
+            }
+            
+            .item-content {
+                padding: var(--spacing-lg);
+            }
+            
+            .modal-header {
+                padding: var(--spacing-md);
+            }
+            
+            .modal-body {
+                padding: var(--spacing-md);
+            }
+            
+            .modal-footer {
+                padding: var(--spacing-sm);
+            }
+            
+            .modal-actions {
+                justify-content: center;
+            }
+            
+            .translation-info {
+                justify-content: center;
+                flex-direction: column;
+            }
+            
+            .theme-toggle-container {
+                top: 5px;
+                right: 5px;
+            }
+            
+            .theme-toggle-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 电子书阅读器特定样式 */
+        @media (max-width: 1024px) and (min-width: 768px) and (orientation: portrait) {
+            /* 平板竖屏模式，适合电子书阅读 */
+            .device-ereader {
+                --font-scale: 1.05;
+                --card-columns: 1;
+                --container-padding: var(--spacing-lg);
+            }
+            
+            body {
+                background-color: var(--bg-color);
+            }
+            
+            .article-content {
+                line-height: 1.8;
+                font-size: calc(18px * var(--font-scale));
+            }
+            
+            .item-card {
+                background-color: #ffffff;
+            }
+        }
+        
+        /* 打印样式 */
+        @media print {
+            .input-section,
+            .examples,
+            .api-selector,
+            .feed-info,
+            .item-card,
+            .modal-actions,
+            footer,
+            .theme-toggle-container {
+                display: none !important;
+            }
+            
+            .container {
+                padding: 0;
+                gap: 0;
+            }
+            
+            header {
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 0 1rem 0 !important;
+            }
+            
+            .modal-content {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .modal-header {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .article-content {
+                font-size: 12pt;
+                line-height: 1.6;
+            }
+        }
+        
+        /* 触摸设备优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .item-card:hover {
+                transform: none;
+            }
+            
+            .btn, .example-btn, .action-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .close-modal, .theme-toggle-btn {
+                width: 44px;
+                height: 44px;
+            }
+        }
+        
+        /* 系统暗色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            body:not(.light-mode) {
+                --text-color: #e9ecef;
+                --text-light: #adb5bd;
+                --text-lighter: #6c757d;
+                --bg-color: #121212;
+                --card-bg: #1e1e1e;
+                --border-color: #2d3436;
+            }
+            
+            body:not(.light-mode) .device-ereader {
+                --bg-color: #1a1a1a;
+                --text-color: #e0e0e0;
+            }
+            
+            body:not(.light-mode) .feed-title,
+            body:not(.light-mode) .item-title,
+            body:not(.light-mode) .article-content h2,
+            body:not(.light-mode) .article-content h3 {
+                color: #e9ecef;
+            }
+            
+            body:not(.light-mode) .article-content code {
+                background-color: #2d3436;
+            }
+            
+            body:not(.light-mode) .item-meta {
+                border-top-color: #2d3436;
+            }
+            
+            body:not(.light-mode) .example-btn {
+                background-color: #2d3436;
+                border-color: #495057;
+                color: #adb5bd;
+            }
+            
+            body:not(.light-mode) .example-btn:hover {
+                background-color: #343a40;
+            }
+        }
+        
+        /* 辅助功能优化 */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* 焦点样式 */
+        *:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        /* 减少动画（如果用户偏好） */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-indicator" id="device-indicator"></div>
+    
+    <!-- 夜间模式切换按钮 -->
+    <div class="theme-toggle-container">
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="切换夜间模式">
+            <span id="theme-icon">🌙</span>
+        </button>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>📰 RSS阅读器</h1>
+            <p class="subtitle">全设备适配，支持夜间模式切换</p>
+        </header>
+        
+        <section class="input-section">
+            <div class="input-group">
+                <input type="url" id="rss-url" placeholder="请输入RSS订阅地址，例如：https://www.ruanyifeng.com/blog/atom.xml" value="https://www.ruanyifeng.com/blog/atom.xml">
+                <button id="load-feed" class="btn">加载订阅</button>
+            </div>
+            
+            <p style="margin-bottom: var(--spacing-sm); color: var(--text-lighter);">或点击使用示例订阅源：</p>
+            <div class="examples">
+                <button class="example-btn" data-url="https://www.ruanyifeng.com/blog/atom.xml">阮一峰网络博客</button>
+                <button class="example-btn" data-url="https://feeds.bbci.co.uk/news/rss.xml">BBC新闻</button>
+                <button class="example-btn" data-url="https://feeds.feedburner.com/TechCrunch/">TechCrunch</button>
+                <button class="example-btn" data-url="https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml">纽约时报</button>
+                <button class="example-btn" data-url="https://hnrss.org/frontpage">Hacker News</button>
+            </div>
+            
+            <div class="api-selector">
+                <label for="api-select">选择API服务：</label>
+                <select id="api-select">
+                    <option value="rss2json">rss2json.com (推荐)</option>
+                    <option value="api-allorigins">api.allorigins.win</option>
+                </select>
+                <span style="color: var(--text-lighter); font-size: calc(var(--font-size-sm) * var(--font-scale));">* 使用API服务解决CORS限制</span>
+            </div>
+        </section>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>正在加载RSS订阅源...
+        </div>
+        
+        <div id="feed-info"></div>
+        <div id="items-container" class="items-container"></div>
+        <div id="error-message"></div>
+        
+        <!-- 文章详情模态框 -->
+        <div class="article-detail-modal" id="article-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close-modal" id="close-modal" aria-label="关闭">&times;</button>
+                    <h2 class="modal-title" id="modal-article-title"></h2>
+                    <div class="modal-meta" id="modal-article-meta"></div>
+                </div>
+                <div class="modal-body">
+                    <div class="translation-loading" id="translation-loading">
+                        <div class="spinner"></div>正在翻译文章内容...
+                    </div>
+                    <div id="translation-error" class="translation-error" style="display: none;"></div>
+                    <div class="article-content" id="modal-article-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <div class="translation-info">
+                        <span>翻译引擎：MyMemory</span>
+                        <span id="translation-status">未翻译</span>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="action-btn translate-btn" id="translate-article">翻译文章</button>
+                        <button class="action-btn" id="show-original">显示原文</button>
+                        <button class="action-btn secondary" id="view-original">查看原文</button>
+                        <button class="action-btn secondary" id="close-modal-footer">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>RSS阅读器 &copy; 2025 | 全设备适配，支持夜间模式和MyMemory翻译</p>
+        </footer>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const rssUrlInput = document.getElementById('rss-url');
+        const loadFeedBtn = document.getElementById('load-feed');
+        const loadingElement = document.getElementById('loading');
+        const feedInfoElement = document.getElementById('feed-info');
+        const itemsContainer = document.getElementById('items-container');
+        const errorMessageElement = document.getElementById('error-message');
+        const exampleButtons = document.querySelectorAll('.example-btn');
+        const apiSelect = document.getElementById('api-select');
+        
+        // 文章详情模态框相关元素
+        const articleModal = document.getElementById('article-modal');
+        const modalArticleTitle = document.getElementById('modal-article-title');
+        const modalArticleMeta = document.getElementById('modal-article-meta');
+        const modalArticleContent = document.getElementById('modal-article-content');
+        const closeModalBtn = document.getElementById('close-modal');
+        const closeModalFooterBtn = document.getElementById('close-modal-footer');
+        const viewOriginalBtn = document.getElementById('view-original');
+        const translateArticleBtn = document.getElementById('translate-article');
+        const showOriginalBtn = document.getElementById('show-original');
+        const translationStatus = document.getElementById('translation-status');
+        const translationLoading = document.getElementById('translation-loading');
+        const translationError = document.getElementById('translation-error');
+        const deviceIndicator = document.getElementById('device-indicator');
+        
+        // 夜间模式相关元素
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        // 当前选中的文章信息
+        let currentArticle = null;
+        let originalContent = '';
+        let translatedContent = '';
+        let isTranslated = false;
+        let currentFeedItems = [];
+        
+        // 设备检测
+        function detectDevice() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isPortrait = height > width;
+            const isTablet = width >= 600 && width <= 1024;
+            const isMobile = width < 600;
+            const isDesktop = width > 1024;
+            
+            // 移除所有设备类
+            document.body.classList.remove('device-desktop', 'device-tablet', 'device-mobile', 'device-ereader');
+            
+            if (isMobile) {
+                document.body.classList.add('device-mobile');
+                deviceIndicator.textContent = '移动端';
+            } else if (isTablet) {
+                if (isPortrait && width >= 768) {
+                    document.body.classList.add('device-ereader');
+                    deviceIndicator.textContent = '电子书模式';
+                } else {
+                    document.body.classList.add('device-tablet');
+                    deviceIndicator.textContent = '平板端';
+                }
+            } else {
+                document.body.classList.add('device-desktop');
+                deviceIndicator.textContent = '桌面端';
+            }
+        }
+        
+        // 初始化设备检测
+        detectDevice();
+        window.addEventListener('resize', detectDevice);
+        window.addEventListener('orientationchange', detectDevice);
+        
+        // 夜间模式功能
+        function initTheme() {
+            const savedTheme = localStorage.getItem('rss-reader-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || savedTheme === 'light') {
+                setTheme(savedTheme);
+            } else if (prefersDark && savedTheme !== 'light') {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+        }
+        
+        function setTheme(theme) {
+            document.body.classList.remove('dark-mode', 'light-mode');
+            
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('rss-reader-theme', 'dark');
+            } else {
+                document.body.classList.add('light-mode');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('rss-reader-theme', 'light');
+            }
+        }
+        
+        function toggleTheme() {
+            if (document.body.classList.contains('dark-mode')) {
+                setTheme('light');
+            } else {
+                setTheme('dark');
+            }
+        }
+        
+        // 初始化主题
+        initTheme();
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            const savedTheme = localStorage.getItem('rss-reader-theme');
+            if (!savedTheme) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+        
+        // 定义API服务
+        const API_SERVICES = {
+            'rss2json': {
+                url: 'https://api.rss2json.com/v1/api.json',
+                param: 'rss_url'
+            },
+            'api-allorigins': {
+                url: 'https://api.allorigins.win/get?url=',
+                param: ''
+            }
+        };
+        
+        // MyMemory翻译服务
+        const MYMEMORY_SERVICE = {
+            name: 'MyMemory',
+            url: 'https://api.mymemory.translated.net/get',
+            method: 'GET',
+            getParams: (text) => ({
+                q: text.substring(0, 500),
+                langpair: 'en|zh',
+                de: 'example@example.com'
+            }),
+            parseResponse: (data) => {
+                if (data.responseData && data.responseData.translatedText) {
+                    return data.responseData.translatedText;
+                } else {
+                    throw new Error('翻译失败: 无返回结果');
+                }
+            }
+        };
+        
+        // 获取API URL
+        function getApiUrl(url) {
+            const apiType = apiSelect.value;
+            const apiService = API_SERVICES[apiType];
+            
+            if (!apiService) {
+                return url;
+            }
+            
+            if (apiType === 'api-allorigins') {
+                return apiService.url + encodeURIComponent(url);
+            }
+            
+            return `${apiService.url}?${apiService.param}=${encodeURIComponent(url)}`;
+        }
+        
+        // 格式化日期函数
+        function formatDate(dateString) {
+            if (!dateString) return '日期未知';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString.substring(0, 30);
+                }
+                return date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return dateString.substring(0, 30);
+            }
+        }
+        
+        // 加载RSS订阅
+        async function loadRSSFeed(url) {
+            loadingElement.classList.add('active');
+            feedInfoElement.innerHTML = '';
+            itemsContainer.innerHTML = '';
+            errorMessageElement.innerHTML = '';
+            currentFeedItems = [];
+            
+            try {
+                if (!url) {
+                    throw new Error('请输入RSS订阅地址');
+                }
+                
+                const apiType = apiSelect.value;
+                const apiUrl = getApiUrl(url);
+                
+                const response = await fetch(apiUrl, {
+                    headers: apiType === 'rss2json' ? {} : {}
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+                
+                let responseData;
+                
+                if (apiType === 'api-allorigins') {
+                    const data = await response.json();
+                    const xmlText = data.contents;
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                    
+                    const parseError = xmlDoc.querySelector('parsererror');
+                    if (parseError) {
+                        throw new Error('无法解析RSS内容，请检查URL是否正确');
+                    }
+                    
+                    responseData = convertXmlToJson(xmlDoc, url);
+                } else {
+                    responseData = await response.json();
+                    
+                    if (responseData.status !== 'ok') {
+                        throw new Error(`API返回错误: ${responseData.message || '未知错误'}`);
+                    }
+                }
+                
+                currentFeedItems = responseData.items || [];
+                
+                const feed = responseData.feed;
+                if (!feed) {
+                    throw new Error('API返回的数据格式不正确');
+                }
+                
+                const feedTitle = feed.title || '未命名订阅';
+                const feedDescription = feed.description || '无描述';
+                const feedLink = feed.link || '#';
+                
+                feedInfoElement.innerHTML = `
+                    <div class="feed-info">
+                        <h2 class="feed-title" id="feed-title">${feedTitle}</h2>
+                        <p class="feed-description">${feedDescription}</p>
+                        <div class="feed-meta">
+                            <span>来源: <a href="${feedLink}" target="_blank" rel="noopener">${new URL(feedLink).hostname || '未知'}</a></span>
+                            <span>更新时间: ${new Date().toLocaleDateString('zh-CN')}</span>
+                            <span>文章数量: ${responseData.items ? responseData.items.length : 0} 篇</span>
+                        </div>
+                    </div>
+                `;
+                
+                const feedTitleElement = document.getElementById('feed-title');
+                if (feedTitleElement && currentFeedItems.length > 0) {
+                    feedTitleElement.style.cursor = 'pointer';
+                    feedTitleElement.addEventListener('click', () => {
+                        const firstArticle = currentFeedItems[0];
+                        showArticleDetail({
+                            title: firstArticle.title,
+                            link: firstArticle.link,
+                            description: firstArticle.description,
+                            content: firstArticle.content || firstArticle.description,
+                            pubDate: firstArticle.pubDate,
+                            author: firstArticle.author || '未知作者',
+                            formattedDate: formatDate(firstArticle.pubDate)
+                        });
+                    });
+                }
+                
+                if (!responseData.items || responseData.items.length === 0) {
+                    itemsContainer.innerHTML = '<div class="error">未找到任何文章内容</div>';
+                    return;
+                }
+                
+                responseData.items.forEach((item, index) => {
+                    if (index >= 20) return;
+                    
+                    const title = item.title || '无标题';
+                    const link = item.link || '#';
+                    const description = item.description || '无描述';
+                    const pubDate = item.pubDate || '';
+                    const author = item.author || '未知作者';
+                    const content = item.content || description;
+                    
+                    const formattedDate = formatDate(pubDate);
+                    
+                    const cleanDescription = description
+                        .replace(/<[^>]*>/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .substring(0, 150) + (description.length > 150 ? '...' : '');
+                    
+                    const cleanTitle = title.replace(/<[^>]*>/g, '').substring(0, 100);
+                    
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'item-card';
+                    itemCard.setAttribute('data-index', index);
+                    itemCard.innerHTML = `
+                        <div class="item-content">
+                            <h3 class="item-title">${cleanTitle}</h3>
+                            <p class="item-description">${cleanDescription || '无描述'}</p>
+                            <div class="item-meta">
+                                <span>${formattedDate || '日期未知'}</span>
+                                <span>${author}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    itemCard.addEventListener('click', () => {
+                        showArticleDetail({
+                            title: title,
+                            link: link,
+                            description: description,
+                            content: content,
+                            pubDate: pubDate,
+                            author: author,
+                            formattedDate: formattedDate || pubDate
+                        });
+                    });
+                    
+                    itemsContainer.appendChild(itemCard);
+                });
+                
+            } catch (error) {
+                console.error('RSS加载错误:', error);
+                errorMessageElement.innerHTML = `
+                    <div class="error">
+                        <strong>加载失败:</strong> ${error.message}
+                        <p>请尝试：</p>
+                        <ul>
+                            <li>检查URL地址是否正确</li>
+                            <li>尝试使用不同的API服务</li>
+                            <li>检查网络连接</li>
+                            <li>确保RSS源是可公开访问的</li>
+                        </ul>
+                        <p style="margin-top: 10px;">提示：您可以尝试点击上方的示例订阅源</p>
+                    </div>
+                `;
+            } finally {
+                loadingElement.classList.remove('active');
+            }
+        }
+        
+        // XML转换为JSON格式
+        function convertXmlToJson(xmlDoc, url) {
+            const channel = xmlDoc.querySelector('channel');
+            let feed = {};
+            let items = [];
+            
+            if (channel) {
+                feed = {
+                    title: channel.querySelector('title')?.textContent || '未命名订阅',
+                    description: channel.querySelector('description')?.textContent || '无描述',
+                    link: channel.querySelector('link')?.textContent || url
+                };
+                
+                const itemElements = xmlDoc.querySelectorAll('item');
+                items = Array.from(itemElements).map(item => ({
+                    title: item.querySelector('title')?.textContent || '无标题',
+                    link: item.querySelector('link')?.textContent || '#',
+                    description: item.querySelector('description')?.textContent || '无描述',
+                    content: item.querySelector('content\\:encoded')?.textContent || 
+                             item.querySelector('description')?.textContent || '无描述',
+                    pubDate: item.querySelector('pubDate')?.textContent || 
+                             item.querySelector('date')?.textContent || '',
+                    author: item.querySelector('author')?.textContent || 
+                            item.querySelector('dc\\:creator')?.textContent || '未知作者'
+                }));
+            } else {
+                const feedElement = xmlDoc.querySelector('feed');
+                if (feedElement) {
+                    feed = {
+                        title: feedElement.querySelector('title')?.textContent || '未命名订阅',
+                        description: feedElement.querySelector('subtitle')?.textContent || '无描述',
+                        link: feedElement.querySelector('link[rel="alternate"]')?.getAttribute('href') || 
+                              feedElement.querySelector('link')?.getAttribute('href') || url
+                    };
+                    
+                    const entryElements = xmlDoc.querySelectorAll('entry');
+                    items = Array.from(entryElements).map(entry => ({
+                        title: entry.querySelector('title')?.textContent || '无标题',
+                        link: entry.querySelector('link[rel="alternate"]')?.getAttribute('href') || 
+                              entry.querySelector('link')?.getAttribute('href') || '#',
+                        description: entry.querySelector('summary')?.textContent || '无描述',
+                        content: entry.querySelector('content')?.textContent || 
+                                 entry.querySelector('summary')?.textContent || '无描述',
+                        pubDate: entry.querySelector('updated')?.textContent || 
+                                 entry.querySelector('published')?.textContent || '',
+                        author: entry.querySelector('author > name')?.textContent || '未知作者'
+                    }));
+                }
+            }
+            
+            return {
+                status: 'ok',
+                feed: feed,
+                items: items
+            };
+        }
+        
+        // 显示文章详情
+        function showArticleDetail(article) {
+            currentArticle = article;
+            originalContent = article.content || article.description;
+            translatedContent = '';
+            isTranslated = false;
+            
+            translationStatus.textContent = '未翻译';
+            translationError.style.display = 'none';
+            translateArticleBtn.disabled = false;
+            translateArticleBtn.textContent = '翻译文章';
+            showOriginalBtn.style.display = 'none';
+            
+            modalArticleTitle.textContent = article.title;
+            
+            modalArticleMeta.innerHTML = `
+                <span>作者: ${article.author}</span>
+                <span>发布时间: ${article.formattedDate}</span>
+            `;
+            
+            let content = originalContent;
+            
+            if (content.length < 500 && article.description) {
+                content = article.description;
+            }
+            
+            const formattedContent = formatArticleContent(content);
+            modalArticleContent.innerHTML = formattedContent;
+            
+            if (article.link && article.link !== '#') {
+                viewOriginalBtn.style.display = 'inline-block';
+            } else {
+                viewOriginalBtn.style.display = 'none';
+            }
+            
+            articleModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 格式化文章内容
+        function formatArticleContent(content) {
+            let cleanedContent = content
+                .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+                .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+                .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
+            
+            if (cleanedContent.includes('<') && cleanedContent.includes('>')) {
+                return cleanedContent;
+            }
+            
+            return cleanedContent
+                .split('\n')
+                .map(paragraph => {
+                    const trimmed = paragraph.trim();
+                    if (trimmed.length === 0) return '';
+                    return `<p>${trimmed}</p>`;
+                })
+                .join('');
+        }
+        
+        // 翻译文章内容
+        async function translateArticle() {
+            if (!currentArticle || !originalContent) {
+                return;
+            }
+            
+            translationLoading.classList.add('active');
+            translateArticleBtn.disabled = true;
+            translateArticleBtn.textContent = '翻译中...';
+            translationError.style.display = 'none';
+            
+            try {
+                const textToTranslate = originalContent
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .substring(0, 500);
+                
+                if (textToTranslate.length < 5) {
+                    throw new Error('文章内容太短，无需翻译');
+                }
+                
+                const params = new URLSearchParams(MYMEMORY_SERVICE.getParams(textToTranslate)).toString();
+                const requestUrl = `${MYMEMORY_SERVICE.url}?${params}`;
+                
+                const response = await fetch(requestUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`翻译API请求失败: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                translatedContent = MYMEMORY_SERVICE.parseResponse(data);
+                
+                if (!translatedContent || translatedContent.trim().length === 0) {
+                    throw new Error('翻译结果为空');
+                }
+                
+                modalArticleContent.innerHTML = `
+                    <div class="translation-result">
+                        <h3 class="translation-title">📖 翻译结果 (${MYMEMORY_SERVICE.name})：</h3>
+                        <div class="translation-content">
+                            ${formatArticleContent(translatedContent)}
+                        </div>
+                        <div class="translation-hint">
+                            <strong>提示：</strong> 机器翻译可能不准确，建议结合原文阅读。点击"显示原文"可查看原始内容。
+                        </div>
+                    </div>
+                `;
+                
+                isTranslated = true;
+                translationStatus.textContent = '已翻译';
+                translateArticleBtn.textContent = '重新翻译';
+                showOriginalBtn.style.display = 'inline-block';
+                
+            } catch (error) {
+                console.error('翻译错误:', error);
+                translationError.textContent = `翻译失败: ${error.message}`;
+                translationError.style.display = 'block';
+                translateArticleBtn.textContent = '翻译文章';
+            } finally {
+                translationLoading.classList.remove('active');
+                translateArticleBtn.disabled = false;
+            }
+        }
+        
+        // 显示原文
+        function showOriginalArticle() {
+            if (!currentArticle || !originalContent) {
+                return;
+            }
+            
+            const formattedContent = formatArticleContent(originalContent);
+            modalArticleContent.innerHTML = formattedContent;
+            
+            isTranslated = false;
+            translationStatus.textContent = '已显示原文';
+            showOriginalBtn.style.display = 'none';
+            translateArticleBtn.textContent = '翻译文章';
+        }
+        
+        // 关闭文章详情模态框
+        function closeArticleDetail() {
+            articleModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            currentArticle = null;
+            originalContent = '';
+            translatedContent = '';
+            isTranslated = false;
+        }
+        
+        // 事件监听
+        loadFeedBtn.addEventListener('click', () => {
+            const url = rssUrlInput.value.trim();
+            if (url) {
+                loadRSSFeed(url);
+            } else {
+                errorMessageElement.innerHTML = `
+                    <div class="error">请输入有效的RSS订阅地址</div>
+                `;
+            }
+        });
+        
+        rssUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadFeedBtn.click();
+            }
+        });
+        
+        exampleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const url = button.getAttribute('data-url');
+                rssUrlInput.value = url;
+                loadRSSFeed(url);
+            });
+        });
+        
+        closeModalBtn.addEventListener('click', closeArticleDetail);
+        closeModalFooterBtn.addEventListener('click', closeArticleDetail);
+        
+        articleModal.addEventListener('click', (e) => {
+            if (e.target === articleModal) {
+                closeArticleDetail();
+            }
+        });
+        
+        viewOriginalBtn.addEventListener('click', () => {
+            if (currentArticle && currentArticle.link && currentArticle.link !== '#') {
+                window.open(currentArticle.link, '_blank');
+            }
+        });
+        
+        translateArticleBtn.addEventListener('click', translateArticle);
+        
+        showOriginalBtn.addEventListener('click', showOriginalArticle);
+        
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        
+        apiSelect.addEventListener('change', () => {
+            const currentUrl = rssUrlInput.value.trim();
+            if (currentUrl) {
+                errorMessageElement.innerHTML = `
+                    <div class="success">
+                        已切换到 ${apiSelect.options[apiSelect.selectedIndex].text}，点击"加载订阅"重新加载
+                    </div>
+                `;
+            }
+        });
+        
+        // 页面加载时自动加载一个示例订阅
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                loadRSSFeed(rssUrlInput.value);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
